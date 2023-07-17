@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'Mapa.dart';
+
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
 
@@ -25,11 +27,22 @@ class _HomeState extends State<Home> {
     
   }
 
+  void _addLocal() {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const Mapa()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Viagens'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xff0066cc),
+        onPressed: () {
+          _addLocal();
+        },
+        child: const Icon(Icons.add),
       ),
       body: Column(
         children: [
