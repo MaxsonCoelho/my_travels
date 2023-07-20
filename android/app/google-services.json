@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "92065715551",
+    "project_id": "my-travels-8d595",
+    "storage_bucket": "my-travels-8d595.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:92065715551:android:ce8898b6c6bd6879aa52ea",
+        "android_client_info": {
+          "package_name": "com.example.my_travels"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "92065715551-nnm85jcmg4c134rfef09vea9bqkvbapu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeYGML-Ny42sk2rjG7wGwJOoCCwMbTL6g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "92065715551-nnm85jcmg4c134rfef09vea9bqkvbapu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "92065715551-n8pgrd54065svhm3477p2096umrelqbe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.myTravels.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
