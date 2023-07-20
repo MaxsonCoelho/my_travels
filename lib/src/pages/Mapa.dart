@@ -1,5 +1,8 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'dart:async';
 
 class Mapa extends StatefulWidget {
@@ -13,24 +16,67 @@ class _MapaState extends State<Mapa> {
 
   final Completer<GoogleMapController> _controller = Completer();
   final Set<Marker> _marcadores = {};
+  late CameraPosition _cameraPosition = const CameraPosition(
+            target: LatLng(-3.10719, -60.0261),
+            zoom: 15
+          );
 
   void _onMapCreated( GoogleMapController controller ) {
     _controller.complete( controller );
   }
 
-  void _getMarker(LatLng latLng) {
-    Marker marcador = Marker(
-      markerId: MarkerId('marcador-${latLng.latitude}-${latLng.longitude}'),
-      position: latLng,
-      infoWindow: const InfoWindow(
-        title: 'Marcador'
-      ) 
+  void _getMarker(LatLng latLng) async {
+    List<Placemark> placemarks = await placemarkFromCoordinates(latLng.latitude, latLng.longitude);
+
+    // ignore: prefer_is_empty, unnecessary_null_comparison
+    if(placemarks != null && placemarks.length > 0) {
+      Placemark address = placemarks[0];
+      String? street = address.thoroughfare;
+
+      Marker marcador = Marker(
+        markerId: MarkerId('marcador-${latLng.latitude}-${latLng.longitude}'),
+        position: latLng,
+        infoWindow: InfoWindow(
+          title: street
+        ) 
+      );
+
+      setState(() {
+        _marcadores.add( marcador );
+      });
+
+    }
+
+  }
+
+  void _moveCamera() async {
+    GoogleMapController googleMapController = await _controller.future;
+    googleMapController.animateCamera(
+      CameraUpdate.newCameraPosition(
+        _cameraPosition
+      )
     );
+  }
 
-    setState(() {
-      _marcadores.add( marcador );
+  void _addListenerLocation() {
+    var locationSettings = const LocationSettings(accuracy: LocationAccuracy.high);
+    Geolocator.getPositionStream( locationSettings: locationSettings ).listen((Position? position) {
+      setState(() {
+        _cameraPosition = CameraPosition(
+          target: LatLng(position!.latitude, position.longitude),
+          zoom: 15
+        );
+        _moveCamera();
+      });
     });
+  }
 
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _addListenerLocation();
   }
 
   @override
@@ -41,10 +87,7 @@ class _MapaState extends State<Mapa> {
       ),
       body: Container(
         child: GoogleMap(
-          initialCameraPosition: const CameraPosition(
-            target: LatLng(-23.562436, -46655005),
-            zoom: 18
-          ),
+          initialCameraPosition: _cameraPosition,
           markers: _marcadores,
           onMapCreated: _onMapCreated,
           onLongPress: _getMarker,
