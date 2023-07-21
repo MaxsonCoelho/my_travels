@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'Mapa.dart';
@@ -11,24 +14,37 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  final List _listTravels = [
-    'Cristo Redentor',
-    'Grande Muralha da China',
-    "Taj Mahal",
-    "Machu Picchu",
-    "Coliseu"
-  ];
+  final _controller = StreamController<QuerySnapshot>.broadcast();
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   void _openMap() {
-    
+    Navigator.push(context, 
+    MaterialPageRoute(builder: (_) => Mapa()));
   }
 
-  void _removeTravel() {
-    
+  void _removeTravel( String idTravel ) {
+    _db.collection('viagens').doc( idTravel ).delete();
   }
 
-  void _addLocal() {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const Mapa()));
+  void _addLocal(String idTravel) {
+    Navigator.push(context, 
+    MaterialPageRoute(builder: (_) => Mapa( idTravel: idTravel )));
+  }
+
+  Future<void> _addListenerTravels() async {
+    final stream = _db.collection('viagens')
+      .snapshots();
+
+    stream.listen((data) {
+      _controller.add( data );
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _addListenerTravels();
   }
 
   @override
@@ -40,53 +56,73 @@ class _HomeState extends State<Home> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xff0066cc),
         onPressed: () {
-          _addLocal();
+          _openMap();
         },
         child: const Icon(Icons.add),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _listTravels.length,
-              itemBuilder:  (context, index) {
-                
-                String titulo = _listTravels[index];
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _controller.stream,
+        builder: (context, snapshot) {
+          switch(snapshot.connectionState) {
+            case ConnectionState.none:
+            case ConnectionState.waiting:
+            case ConnectionState.active:
+            case ConnectionState.done:
 
-                return GestureDetector(
-                  onTap: () {
-                    _openMap();
-                  },
-                  child: Card(
-                    child: ListTile(
-                      title: Text(titulo),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              _removeTravel();
-                            },
-                            child: const Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Icon(
-                                Icons.remove_circle,
-                                color: Colors.red,
+            QuerySnapshot<Object?>? querySnapshot = snapshot.data;
+            List<DocumentSnapshot> viagens = querySnapshot!.docs.toList();
+
+            return Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: viagens.length,
+                          itemBuilder:  (context, index) {
+                            
+                            DocumentSnapshot item = viagens[index];
+                            String titulo = item['titulo'];
+                            String idTravel = item.id;
+
+                            return GestureDetector(
+                              onTap: () {
+                                _addLocal( idTravel );
+                              },
+                              child: Card(
+                                child: ListTile(
+                                  title: Text(titulo),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          _removeTravel( idTravel );
+                                        },
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: Icon(
+                                            Icons.remove_circle,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-            ),
-          )
-        ],
+                            );
+                          }
+                        ),
+                      )
+                    ],
+                  );
+            break;
+          }
+        },
       )
     );
 
   }
 }
+
+
 

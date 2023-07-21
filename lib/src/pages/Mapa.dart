@@ -1,4 +1,5 @@
 
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -7,7 +8,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
 class Mapa extends StatefulWidget {
-  const Mapa({super.key});
+  String? idTravel;
+
+  Mapa({super.key,  this.idTravel });
 
   @override
   State<Mapa> createState() => _MapaState();
@@ -84,12 +87,44 @@ class _MapaState extends State<Mapa> {
     });
   }
 
+  void _getTravelId( String? idTravel ) async {
+
+    if( idTravel != null ) {
+
+      DocumentSnapshot documentSnapshot = await _db.collection('viagens')
+      .doc( idTravel ).get();
+      var data = documentSnapshot.data() as Map<String, dynamic>;
+
+      String titulo = data['titulo'];
+      LatLng latLng = LatLng(
+        data['latitude'], 
+        data['longitude']
+        );
+
+      setState(() {
+
+        Marker marcador = Marker(
+          markerId: MarkerId('marcador-${latLng.latitude}-${latLng.longitude}'),
+          position: latLng,
+          infoWindow: InfoWindow(
+            title: titulo,
+          ) 
+        );
+        
+        _marcadores.add(marcador);
+        _cameraPosition = CameraPosition(target: latLng, zoom: 18);
+        _moveCamera();
+      });
+    }else {
+      _addListenerLocation();
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _addListenerLocation();
+    _getTravelId( widget.idTravel );
   }
 
   @override
